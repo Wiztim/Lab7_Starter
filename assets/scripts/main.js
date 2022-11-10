@@ -45,7 +45,21 @@ function initializeServiceWorker() {
   // We first must register our ServiceWorker here before any of the code in
   // sw.js is executed.
   // B1. TODO - Check if 'serviceWorker' is supported in the current browser
+  if (!('serviceWorker' in navigator)) {
+    return;
+  }
+
+
   // B2. TODO - Listen for the 'load' event on the window object.
+  window.addEventListener('load', async () => {
+    try {
+      const worker = await navigator.serviceWorker.register('./sw.js', {scope: './'});
+      console.log('Success: Service worker registered');
+      console.log(worker);
+    } catch (error) {
+      console.log(error);
+    }
+  });
   // Steps B3-B6 will be *inside* the event listener's function created in B2
   // B3. TODO - Register './sw.js' as a service worker (The MDN article
   //            "Using Service Workers" will help you here)
@@ -83,7 +97,7 @@ async function getRecipes() {
   //            take two parameters - resolve, and reject. These are functions
   //            you can call to either resolve the Promise or Reject it.
   let arrRecipe = [];
-  let myPromise = new Promise( async (myResolve, myReject) => {
+  return new Promise(async (resolve, reject) => {
     for (const URL of RECIPE_URLS) {
       try {
         const response = await fetch(URL);
@@ -91,11 +105,12 @@ async function getRecipes() {
         arrRecipe.push(jsonReponse);
       } catch (error) {
         console.error(error);
-        myReject(error);
+        reject(error);
       }
     }
 
     saveRecipesToStorage(arrRecipe);
+    resolve(arrRecipe);
   });
   /**************************/
   // A4-A11 will all be *inside* the callback function we passed to the Promise
